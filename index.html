@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BobStore | Colección Exclusiva</title>
+    <link rel="stylesheet" href="css/style.css?v=10">
+</head>
+<body>
+    <header>
+        <img src="assets/logo-oso.png" class="logo" alt="BobStore">
+        <h1>Bob Store</h1>
+        <p>Double AA & Exclusivos</p>
+    </header>
+
+    <main>
+        <div id="loading" style="text-align: center; padding: 50px;">
+            <div class="loader"></div>
+            <p style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 15px;">Cargando catálogo</p>
+        </div>
+        
+        <div id="catalogo" class="grid-products" style="display: none;"></div>
+    </main>
+
+    <script type="module">
+        import { db } from "./js/firebase-config.js";
+        import { collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const formatearCLP = (numero) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(numero);
+
+        async function init() {
+            const container = document.getElementById('catalogo');
+            const loading = document.getElementById('loading');
+            const numWsp = "56937429708"; 
+
+            try {
+                const q = query(collection(db, "productos"), orderBy("fecha", "desc"));
+                const docs = await getDocs(q);
+                
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+
+                if (docs.empty) {
+                    container.innerHTML = "<p style='text-align:center; grid-column: 1/-1; color: var(--text-muted);'>No hay productos disponibles.</p>";
+                    return;
+                }
+
+                let htmlVitrina = ""; 
+                
+                docs.forEach((doc) => {
+                    const p = doc.data();
+                    const id = doc.id;
+                    const imagenPrincipal = (p.imagenes && p.imagenes.length > 0) ? p.imagenes[0] : (p.imagen || ''); 
+                    const mensajeWsp = encodeURIComponent(`Hola Bob Store. Me interesa adquirir: ${p.nombre}`);
+
+                    htmlVitrina += `
+                        <div class="product-card" style="background: #111;">
+                            <img src="${imagenPrincipal}" loading="lazy" alt="${p.nombre}" 
+                                 style="opacity: 0; transition: opacity 0.8s ease;" 
+                                 onload="this.style.opacity=1">
+                            <div class="overlay">
+                                <h3>${p.nombre}</h3>
+                                <span class="price-tag">${formatearCLP(p.precio)}</span>
+                                
+                                <a href="product-detail.html?id=${id}" class="btn-outline">Ver Detalles</a>
+                                <a href="https://wa.me/${numWsp}?text=${mensajeWsp}" target="_blank" class="btn-solid">
+                                    COMPRAR VÍA WHATSAPP
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = htmlVitrina;
+
+            } catch (e) { 
+                console.error(e); 
+                loading.innerHTML = '<p style="color: #ff4500; text-align: center;">Error de conexión.</p>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

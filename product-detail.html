@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle | BobStore</title>
+    <link rel="stylesheet" href="css/style.css?v=9">
+</head>
+<body>
+    <a href="index.html" class="back-link">VOLVER AL CATÁLOGO</a>
+    
+    <div id="content">
+        <div class="loader"></div>
+    </div>
+
+    <script type="module">
+        import { db } from "./js/firebase-config.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const formatearCLP = (numero) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(numero);
+
+        async function cargarDetalle() {
+            const id = new URLSearchParams(window.location.search).get('id');
+            const contentDiv = document.getElementById('content');
+
+            if(!id) {
+                contentDiv.innerHTML = "<p style='text-align:center; margin-top:50px; color: #888; text-transform: uppercase; letter-spacing: 2px;'>Producto no encontrado</p>";
+                return;
+            }
+
+            try {
+                const docSnap = await getDoc(doc(db, "productos", id));
+                
+                if(docSnap.exists()) {
+                    const p = docSnap.data();
+                    const numWsp = "56937429708";
+                    const msg = encodeURIComponent(`Hola Bob Store. Me interesa adquirir: ${p.nombre}`);
+                    
+                    const galeria = Array.isArray(p.imagenes) ? p.imagenes : (p.imagen ? [p.imagen] : []);
+                    const imagenPrincipal = galeria.length > 0 ? galeria[0] : 'assets/placeholder.jpg';
+
+                    let thumbnailsHTML = '';
+                    if (galeria.length > 1) {
+                        galeria.forEach((img, i) => {
+                            thumbnailsHTML += `<img src="${img}" class="thumbnail ${i===0 ? 'active' : ''}" 
+                                style="opacity: 0; transition: opacity 0.5s ease;" 
+                                onload="this.style.opacity=''" 
+                                onclick="cambiarImagen('${img}', this)">`;
+                        });
+                    }
+
+                    contentDiv.innerHTML = `
+                        <div class="detail-wrapper">
+                            <div class="gallery-container">
+                                <img src="${imagenPrincipal}" id="imagen-principal" class="main-image" alt="${p.nombre}" 
+                                     style="opacity: 0; transition: opacity 0.8s ease;" 
+                                     onload="this.style.opacity=1">
+                                <div class="thumbnail-row">${thumbnailsHTML}</div>
+                            </div>
+                            
+                            <div class="info-panel">
+                                <h2>${p.nombre}</h2>
+                                <span class="price-tag-large">${formatearCLP(p.precio)}</span>
+                                <p class="description">${p.descripcion || 'Pieza exclusiva. Información adicional no disponible.'}</p>
+                                
+                                <a href="https://wa.me/${numWsp}?text=${msg}" target="_blank" class="btn-solid">
+                                    COMPRAR VÍA WHATSAPP
+                                </a>
+                                
+                                <p style="text-align: center; margin-top: 25px; font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 2px;">
+                                    Gestión de compra directa
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    contentDiv.innerHTML = "<p style='text-align:center; margin-top:50px; color: #888; text-transform: uppercase; letter-spacing: 2px;'>La pieza ya no está disponible</p>";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                contentDiv.innerHTML = "<p style='text-align:center; margin-top:50px; color: #ff5e00;'>Error de comunicación con el servidor.</p>";
+            }
+        }
+
+        window.cambiarImagen = function(url, elementoThumbnail) {
+            const mainImg = document.getElementById('imagen-principal');
+            mainImg.style.opacity = '0.4';
+            setTimeout(() => {
+                mainImg.src = url;
+                mainImg.style.opacity = '1';
+            }, 250);
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            elementoThumbnail.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarDetalle);
+    </script>
+</body>
+</html>
