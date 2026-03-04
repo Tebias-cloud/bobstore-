@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | BobStore</title>
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=11">
     <style>
         body { padding: 40px 20px; max-width: 800px; margin: 0 auto; }
-        .admin-header { text-align: center; margin-bottom: 40px; }
+        .admin-header { text-align: center; margin-bottom: 40px; position: relative; }
         .admin-header h2 { font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 1.4rem; color: #fff;}
         
         .panel { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.03); margin-bottom: 30px; }
@@ -28,47 +28,74 @@
         .btn-edit:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
         .btn-delete:hover { background: #3a1111; border-color: #8a2222; color: #ff8888; }
         
-        @media (max-width: 600px) { .inventory-item { flex-direction: column; align-items: flex-start; } .item-actions { width: 100%; justify-content: space-between; margin-top: 10px; } .btn-action { flex: 1; text-align: center; } }
+        .btn-logout { position: absolute; top: 0; right: 0; background: transparent; color: var(--text-muted); border: 1px solid #333; padding: 8px 15px; border-radius: 6px; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; }
+        .btn-logout:hover { color: #fff; border-color: #555; }
+
+        @media (max-width: 600px) { .inventory-item { flex-direction: column; align-items: flex-start; } .item-actions { width: 100%; justify-content: space-between; margin-top: 10px; } .btn-action { flex: 1; text-align: center; } .btn-logout { position: relative; display: block; width: 100%; margin-top: 20px; } }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h2>Panel de Control</h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase;">Gestión de inventario</p>
-    </div>
-    
-    <div class="panel">
-        <h3 id="form-titulo">Subir Nuevo Producto</h3>
+
+    <div id="login-screen" class="panel" style="max-width: 400px; margin: 100px auto; text-align: center; display: none;">
+        <img src="assets/logo-oso.png" style="width: 80px; border-radius: 50%; margin-bottom: 20px;">
+        <h3 style="border: none; margin-bottom: 10px;">Acceso Restringido</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 25px;">Ingresa tus credenciales de administrador.</p>
         
-        <input type="text" id="nombre" placeholder="Nombre del producto">
-        <input type="number" id="precio" placeholder="Precio en CLP (ej: 25000)">
-        <textarea id="descripcion" placeholder="Descripción detallada" rows="4"></textarea>
+        <input type="email" id="admin-email" placeholder="Correo electrónico">
+        <input type="password" id="admin-pass" placeholder="Contraseña">
         
-        <label style="display: block; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Imágenes (Múltiples permitidas)</label>
-        <p id="edit-notice" style="display:none; font-size: 0.85rem; color: var(--text-main); margin-bottom: 15px;">Modo edición activado.</p>
-        
-        <input type="file" id="fotos" accept="image/*" multiple>
-        
-        <button id="btnSubir" class="btn-solid" style="margin-top: 15px;">PUBLICAR EN CATÁLOGO</button>
-        <button id="btnCancelar" class="btn-outline" style="display:none; margin-top: 10px;">CANCELAR EDICIÓN</button>
-        
-        <p id="estado" style="text-align:center; margin-top:20px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;"></p>
+        <button id="btnLogin" class="btn-solid" style="margin-top: 10px;">INGRESAR</button>
+        <p id="login-error" style="color: #ff4500; font-size: 0.85rem; margin-top: 15px; display: none;"></p>
     </div>
 
-    <div class="panel">
-        <h3>Inventario Actual</h3>
-        <div id="lista-inventario" class="inventory-list">
-            <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Cargando registros...</p>
+    <div id="admin-dashboard" style="display: none;">
+        <div class="admin-header">
+            <h2>Panel de Control</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase;">Gestión de inventario</p>
+            <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
+        </div>
+        
+        <div class="panel">
+            <h3 id="form-titulo">Subir Nuevo Producto</h3>
+            
+            <input type="text" id="nombre" placeholder="Nombre del producto">
+            <input type="number" id="precio" placeholder="Precio en CLP (ej: 25000)">
+            <textarea id="descripcion" placeholder="Descripción detallada" rows="4"></textarea>
+            
+            <label style="display: block; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Imágenes (Múltiples permitidas)</label>
+            <p id="edit-notice" style="display:none; font-size: 0.85rem; color: var(--text-main); margin-bottom: 15px;">Modo edición activado.</p>
+            
+            <input type="file" id="fotos" accept="image/*" multiple>
+            
+            <button id="btnSubir" class="btn-solid" style="margin-top: 15px;">PUBLICAR EN CATÁLOGO</button>
+            <button id="btnCancelar" class="btn-outline" style="display:none; margin-top: 10px;">CANCELAR EDICIÓN</button>
+            
+            <p id="estado" style="text-align:center; margin-top:20px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;"></p>
+        </div>
+
+        <div class="panel">
+            <h3>Inventario Actual</h3>
+            <div id="lista-inventario" class="inventory-list">
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Cargando registros...</p>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { db, storage } from "./js/firebase-config.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
         import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const formatearCLP = (numero) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(numero);
 
+        // UI Elements
+        const loginScreen = document.getElementById('login-screen');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnLogout = document.getElementById('btnLogout');
+        const loginError = document.getElementById('login-error');
+        
         const btnSubir = document.getElementById('btnSubir');
         const btnCancelar = document.getElementById('btnCancelar');
         const estado = document.getElementById('estado');
@@ -79,6 +106,45 @@
         let idProductoEditando = null;
         let imagenesActuales = [];
         let catalogoGlobal = {};
+
+        // INICIALIZAR AUTENTICACIÓN
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuario logueado, mostrar panel y cargar datos
+                loginScreen.style.display = 'none';
+                adminDashboard.style.display = 'block';
+                cargarInventario();
+            } else {
+                // No hay sesión, mostrar login
+                loginScreen.style.display = 'block';
+                adminDashboard.style.display = 'none';
+            }
+        });
+
+        btnLogin.addEventListener('click', async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            
+            if(!email || !pass) return;
+            
+            btnLogin.innerText = "VERIFICANDO...";
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                loginError.style.display = 'none';
+                btnLogin.innerText = "INGRESAR";
+            } catch (error) {
+                loginError.innerText = "Credenciales incorrectas o usuario inexistente.";
+                loginError.style.display = 'block';
+                btnLogin.innerText = "INGRESAR";
+            }
+        });
+
+        btnLogout.addEventListener('click', () => {
+            signOut(auth);
+        });
 
         // Motor de compresión de imágenes
         const comprimirImagen = (file) => {
@@ -273,8 +339,6 @@
                 btnSubir.disabled = false;
             }
         });
-
-        document.addEventListener('DOMContentLoaded', cargarInventario);
     </script>
 </body>
 </html>
