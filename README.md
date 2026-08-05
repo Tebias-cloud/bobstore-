@@ -6,6 +6,14 @@ La aplicación permite a los usuarios navegar por un catálogo dinámico y consu
 
 ---
 
+## 📸 Capturas de Pantalla (Visual Showcase)
+
+| Vista 1 - Catálogo Principal | Vista 2 - Detalle de Prenda | Vista 3 - Editor de Stock (Admin) |
+| :---: | :---: | :---: |
+| ![Catálogo Principal](assets/screenshots/bobstore1.webp) | ![Detalle de Prenda](assets/screenshots/bobstore2.webp) | ![Editor de Stock](assets/screenshots/bobstore3.webp) |
+
+---
+
 ## 🏗️ Arquitectura y Funcionamiento
 
 El proyecto está diseñado bajo una arquitectura estática sin dependencias de compiladores locales, cargando los módulos directamente desde CDN.
